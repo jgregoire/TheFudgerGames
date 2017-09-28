@@ -8,6 +8,7 @@
 --     'Target' is the target of the action. This could be the Actor, or another player.
 --     Actions should generally require the actor to be alive.
 
+Actions = {}
 
 -- Helper function: Ensure stat stays between 0 and 10.
 function set_stat(stat)
@@ -25,7 +26,7 @@ end
 -- Effects: Regain a little HP and EN.
 -- Dead actor: still return 'true', but seriously do nothing, ending this player's turn.
 function do_nothing(actor, target)
-	if actor.stats.HP == 0 then -- Actor must be alive.
+	if actor.stats.HP <= 0 then -- Actor must be alive.
 		return false
 	else
 		actor.stats.HP = set_stat(actor.stats.HP + 1)
@@ -36,10 +37,18 @@ function do_nothing(actor, target)
 	end
 end
 
+Actions.Do_Nothing = {
+	items_needed = {},
+	rate = 5,
+	do_action = do_nothing
+}
+
 -- Action: Rest
 -- Effects: Regain moderate energy and a little HP
 function rest(actor, target)
-	if actor.stats.HP == 0 then -- Actor must be alive
+	if actor.stats.HP == 0 or
+	   actor.stats.HP >= 10 or
+	   actor.stats.EN >= 10 then
 		return false
 	else
 		actor.stats.HP = set_stat(actor.stats.HP + 1)
@@ -52,11 +61,13 @@ end
 -- Action: Scream
 -- Effects: Sort of like doing nothing, but screaming is cathartic, so recover some PR
 function scream(actor, target)
-	if actor.stats.HP == 0 then
+	if actor.stats.HP == 0 or
+	   actor.stats.EN < 1 then
 		return false
 	else
 		actor.stats.HP = set_stat(actor.stats.HP + 1)
 		actor.stats.PR = set_stat(actor.stats.PR + 1)
+		actor.stats.EN = set_stat(actor.stats.EN - 1)
 		print actor.name + " screams for a while, then feels a bit better."
 		return true
 	end
